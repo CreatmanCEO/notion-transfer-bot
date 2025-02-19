@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Конфиденциальные данные
 .env
 transfer_progress.json
@@ -12,6 +13,8 @@ __pycache__/
 *$py.class
 *.so
 =======
+=======
+>>>>>>> 78f9b6baf77bf90864587dee6a7e62f137387229
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -21,6 +24,9 @@ __pycache__/
 *.so
 
 # Distribution / packaging
+<<<<<<< HEAD
+>>>>>>> 78f9b6baf77bf90864587dee6a7e62f137387229
+=======
 >>>>>>> 78f9b6baf77bf90864587dee6a7e62f137387229
 .Python
 build/
@@ -35,6 +41,7 @@ parts/
 sdist/
 var/
 wheels/
+<<<<<<< HEAD
 *.egg-info/
 .installed.cfg
 *.egg
@@ -51,6 +58,8 @@ ENV/
 *.swo
 .DS_Store 
 
+=======
+>>>>>>> 78f9b6baf77bf90864587dee6a7e62f137387229
 share/python-wheels/
 *.egg-info/
 .installed.cfg
@@ -191,4 +200,7 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+<<<<<<< HEAD
  78f9b6baf77bf90864587dee6a7e62f137387229
+=======
+>>>>>>> 78f9b6baf77bf90864587dee6a7e62f137387229

@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 # Notion Database Transfer Tool
 
 Инструмент для переноса данных между базами данных Notion. Поддерживает перенос между разными рабочими пространствами и аккаунтами.
@@ -78,6 +79,10 @@ notion-transfer-tool/
 ## Лицензия
 
 MIT 
+=======
+# notion-transfer-bot
+notion-transfer-bot
+>>>>>>> 78f9b6baf77bf90864587dee6a7e62f137387229
 =======
 # notion-transfer-bot
 notion-transfer-bot
