@@ -10,6 +10,8 @@ services:
     healthCheckPath: /health
     envVars:
       - key: TELEGRAM_BOT_TOKEN
-        sync: false
+        value: 7343545514:AAFUY4a9arc5dR2wHQU5uma3AC58HJ03vJM
+      - key: WEBHOOK_URL
+        value: https://notion-transfer-bot.onrender.com/webhook
     buildCommand: docker build -t notion-transfer-bot .
     startCommand: docker run notion-transfer-bot 
