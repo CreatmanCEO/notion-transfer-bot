@@ -307,7 +307,7 @@ class NotionTransfer:
                         await update.message.reply_text(
                             f"✅ Прогресс: {self.progress.progress_percentage:.1f}% "
                             f"({i}/{self.progress.total_pages})"
-                        )
+                    )
                 else:
                     self.progress.add_failed_page(page.id, "Ошибка при создании страницы")
                 
@@ -388,31 +388,58 @@ async def health_check(request):
 
 async def webhook_handler(request):
     """Обработчик вебхуков от Telegram"""
-    if app:
-        update = Update.de_json(await request.json(), app.bot)
-        await app.process_update(update)
-    return web.Response(status=200)
+    try:
+        if app:
+            data = await request.json()
+            logger.info(f"Received webhook data: {data}")
+            
+            update = Update.de_json(data, app.bot)
+            if update:
+                logger.info(f"Processing update {update.update_id} from user {update.effective_user.id if update.effective_user else 'Unknown'}")
+                await app.process_update(update)
+            else:
+                logger.warning("Failed to parse update from webhook data")
+        else:
+            logger.error("Application not initialized")
+            return web.Response(status=500, text="Application not initialized")
+            
+        return web.Response(status=200)
+    except Exception as e:
+        logger.error(f"Error in webhook handler: {str(e)}", exc_info=True)
+        return web.Response(status=500, text=str(e))
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Начало диалога"""
-    welcome_text = (
-        "👋 Hi! I'm a bot for transferring data between Notion databases.\n\n"
-        "I'll help you:\n"
-        "📋 Transfer all records from one database to another\n"
-        "🔄 Preserve data structure and properties\n"
-        "📊 Track progress in real-time\n\n"
-        "👋 Привет! Я бот для переноса данных между базами Notion.\n\n"
-        "Я помогу вам:\n"
-        "📋 Перенести все записи из одной базы в другую\n"
-        "🔄 Сохранить структуру и свойства данных\n"
-        "📊 Отслеживать прогресс в реальном времени\n\n"
-        "Choose interface language / Выберите язык интерфейса:"
-    )
-    await update.message.reply_text(
-        welcome_text,
-        reply_markup=get_language_keyboard()
-    )
-    return LANGUAGE_SELECT
+    try:
+        logger.info(f"Starting conversation with user {update.effective_user.id}")
+        welcome_text = (
+            "👋 Hi! I'm a bot for transferring data between Notion databases.\n\n"
+            "I'll help you:\n"
+            "📋 Transfer all records from one database to another\n"
+            "🔄 Preserve data structure and properties\n"
+            "📊 Track progress in real-time\n\n"
+            "👋 Привет! Я бот для переноса данных между базами Notion.\n\n"
+            "Я помогу вам:\n"
+            "📋 Перенести все записи из одной базы в другую\n"
+            "🔄 Сохранить структуру и свойства данных\n"
+            "📊 Отслеживать прогресс в реальном времени\n\n"
+            "Choose interface language / Выберите язык интерфейса:"
+        )
+        
+        # Очищаем данные пользователя при новом старте
+        if update.effective_user.id in user_data:
+            del user_data[update.effective_user.id]
+        if 'language' in context.user_data:
+            del context.user_data['language']
+        
+        await update.message.reply_text(
+            welcome_text,
+            reply_markup=get_language_keyboard()
+        )
+        return LANGUAGE_SELECT
+    except Exception as e:
+        logger.error(f"Error in start handler: {str(e)}", exc_info=True)
+        raise
 
 async def language_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Обработка выбора языка"""
@@ -628,8 +655,25 @@ async def confirm_transfer(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
 async def setup_webhook(app: Application, webhook_url: str):
     """Настройка вебхука"""
-    await app.bot.set_webhook(webhook_url)
-    logger.info(f"Webhook установлен на {webhook_url}")
+    try:
+        # Сначала удаляем старый вебхук
+        await app.bot.delete_webhook()
+        
+        # Устанавливаем новый вебхук
+        await app.bot.set_webhook(webhook_url)
+        logger.info(f"Webhook установлен на {webhook_url}")
+        
+        # Проверяем информацию о вебхуке
+        webhook_info = await app.bot.get_webhook_info()
+        logger.info(f"Webhook info: {webhook_info}")
+        
+        if webhook_info.url != webhook_url:
+            logger.error(f"Webhook URL mismatch: expected {webhook_url}, got {webhook_info.url}")
+            raise ValueError("Webhook setup failed: URL mismatch")
+            
+    except Exception as e:
+        logger.error(f"Error setting up webhook: {str(e)}", exc_info=True)
+        raise
 
 async def run_web_server():
     """Запуск веб-сервера"""
@@ -660,13 +704,18 @@ def main() -> None:
     
     # Добавление обработчиков
     conv_handler = ConversationHandler(
-        entry_points=[CommandHandler("start", start)],
+        entry_points=[
+            CommandHandler("start", start),
+            MessageHandler(filters.TEXT & ~filters.COMMAND, start)
+        ],
         states={
             LANGUAGE_SELECT: [
-                CallbackQueryHandler(language_callback, pattern=r"^lang_")
+                CallbackQueryHandler(language_callback, pattern=r"^lang_"),
+                MessageHandler(filters.TEXT & ~filters.COMMAND, start)
             ],
             MAIN_MENU: [
-                CallbackQueryHandler(menu_callback)
+                CallbackQueryHandler(menu_callback),
+                MessageHandler(filters.TEXT & ~filters.COMMAND, start)
             ],
             ORIGIN_TOKEN: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, get_origin_token),
@@ -688,8 +737,11 @@ def main() -> None:
                 CallbackQueryHandler(confirm_transfer, pattern=r"^(confirm_|back_to_menu|switch_lang)")
             ]
         },
-        fallbacks=[CommandHandler("cancel", cancel)],
-        per_message=True
+        fallbacks=[
+            CommandHandler("cancel", cancel),
+            CommandHandler("start", start),
+            MessageHandler(filters.TEXT & ~filters.COMMAND, start)
+        ]
     )
     
     app.add_handler(conv_handler)
@@ -714,8 +766,14 @@ def main() -> None:
         # Запускаем приложение
         loop.run_until_complete(app.start())
         
-        # Запускаем цикл событий
-        loop.run_forever()
+        try:
+            # Запускаем цикл событий
+            loop.run_forever()
+        except (KeyboardInterrupt, SystemExit):
+            pass
+        finally:
+            app.stop()
+            loop.close()
     else:
         # Fallback на polling режим для локальной разработки
         app.run_polling()
@@ -725,9 +783,16 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
     logger.error(f"Exception while handling an update: {context.error}")
     
     if isinstance(context.error, Exception):
-        error_message = "❌ Произошла ошибка. Пожалуйста, попробуйте снова или обратитесь к администратору."
-        if isinstance(update, Update) and update.effective_message:
-            await update.effective_message.reply_text(error_message)
+        error_message = "❌ An error occurred. Please try again or contact administrator.\n\n❌ Произошла ошибка. Пожалуйста, попробуйте снова или обратитесь к администратору."
+        if isinstance(update, Update):
+            if update.effective_message:
+                await update.effective_message.reply_text(error_message)
+            elif update.callback_query:
+                await update.callback_query.answer(error_message[:200])  # Telegram ограничивает длину ответа
+    
+    # Логируем детали ошибки
+    logger.error("Update: %s", update)
+    logger.error("Error: %s", context.error, exc_info=True)
 
 if __name__ == "__main__":
     main() 
