@@ -95,7 +95,38 @@ TEXTS = {
             "2. Убедитесь, что ID баз указаны верно\n"
             "3. Проверьте права доступа интеграций\n\n"
             "Нужна помощь? Напишите @your_username"
-        )
+        ),
+        'tokens_help_text': (
+            "*Как получить токены Notion:*\n\n"
+            "1. Перейдите на [страницу интеграций](https://www.notion.so/my-integrations)\n"
+            "2. Нажмите 'Create new integration'\n"
+            "3. Заполните форму:\n"
+            "   - Name: любое понятное название\n"
+            "   - Associated workspace: выберите рабочее пространство\n"
+            "4. Нажмите 'Submit'\n"
+            "5. Скопируйте 'Internal Integration Token'\n\n"
+            "❗️ Важно: создайте отдельные интеграции для исходного и целевого рабочих пространств\n\n"
+            "После получения токенов:\n"
+            "1. Откройте базу данных в Notion\n"
+            "2. Нажмите '⋮' -> 'Add connections'\n"
+            "3. Выберите созданную интеграцию"
+        ),
+        'db_help_text': (
+            "*Как найти ID базы данных:*\n\n"
+            "1. Откройте базу данных в браузере\n"
+            "2. Скопируйте часть URL после последнего '/'\n"
+            "   Пример: notion.so/workspace/*ID-БАЗЫ*?v=...\n\n"
+            "❗️ ID базы - это длинная строка символов\n"
+            "Пример: a1b2c3d4e5f6g7h8i9j0\n\n"
+            "Убедитесь, что:\n"
+            "✅ База открыта как полноэкранная страница\n"
+            "✅ URL содержит '?v=' после ID\n"
+            "✅ Интеграция имеет доступ к базе"
+        ),
+        'transfer_confirm': "Вы уверены, что хотите начать перенос?",
+        'yes': "✅ Да",
+        'no': "❌ Нет",
+        'return_menu': "🏠 Вернуться в меню"
     },
     'en': {
         'welcome': (
@@ -104,7 +135,12 @@ TEXTS = {
             "📋 Transfer all records from one database to another\n"
             "🔄 Preserve data structure and properties\n"
             "📊 Track progress in real-time\n\n"
-            "Choose interface language:"
+            "👋 Привет! Я бот для переноса данных между базами Notion.\n\n"
+            "Я помогу вам:\n"
+            "📋 Перенести все записи из одной базы в другую\n"
+            "🔄 Сохранить структуру и свойства данных\n"
+            "📊 Отслеживать прогресс в реальном времени\n\n"
+            "Choose interface language / Выберите язык интерфейса:"
         ),
         'main_menu': "🏠 Main Menu",
         'select_action': "Select an action:",
@@ -164,7 +200,38 @@ TEXTS = {
             "2. Make sure database IDs are valid\n"
             "3. Verify integration permissions\n\n"
             "Need help? Contact @your_username"
-        )
+        ),
+        'tokens_help_text': (
+            "*How to get Notion tokens:*\n\n"
+            "1. Go to [integrations page](https://www.notion.so/my-integrations)\n"
+            "2. Click 'Create new integration'\n"
+            "3. Fill the form:\n"
+            "   - Name: any clear name\n"
+            "   - Associated workspace: select workspace\n"
+            "4. Click 'Submit'\n"
+            "5. Copy 'Internal Integration Token'\n\n"
+            "❗️ Important: create separate integrations for source and target workspaces\n\n"
+            "After getting tokens:\n"
+            "1. Open database in Notion\n"
+            "2. Click '⋮' -> 'Add connections'\n"
+            "3. Select created integration"
+        ),
+        'db_help_text': (
+            "*How to find database ID:*\n\n"
+            "1. Open database in browser\n"
+            "2. Copy part of URL after last '/'\n"
+            "   Example: notion.so/workspace/*DATABASE-ID*?v=...\n\n"
+            "❗️ Database ID is a long string of characters\n"
+            "Example: a1b2c3d4e5f6g7h8i9j0\n\n"
+            "Make sure that:\n"
+            "✅ Database is opened as full-page\n"
+            "✅ URL contains '?v=' after ID\n"
+            "✅ Integration has access to database"
+        ),
+        'transfer_confirm': "Are you sure you want to start the transfer?",
+        'yes': "✅ Yes",
+        'no': "❌ No",
+        'return_menu': "🏠 Return to menu"
     }
 }
 
@@ -284,7 +351,33 @@ def get_main_menu_keyboard(lang: str):
             InlineKeyboardButton(texts['faq'], callback_data="faq"),
             InlineKeyboardButton(texts['about'], callback_data="about")
         ],
-        [InlineKeyboardButton(texts['help'], callback_data="help")]
+        [InlineKeyboardButton(texts['help'], callback_data="help")],
+        [InlineKeyboardButton("🇬🇧 English" if lang == "ru" else "🇷🇺 Русский", 
+                            callback_data="switch_lang")]
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+def get_navigation_keyboard(lang: str):
+    """Создание клавиатуры навигации"""
+    texts = TEXTS[lang]
+    keyboard = [
+        [InlineKeyboardButton(texts['return_menu'], callback_data="back_to_menu")],
+        [InlineKeyboardButton("🇬🇧 English" if lang == "ru" else "🇷🇺 Русский", 
+                            callback_data="switch_lang")]
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+def get_confirmation_keyboard(lang: str):
+    """Создание клавиатуры подтверждения"""
+    texts = TEXTS[lang]
+    keyboard = [
+        [
+            InlineKeyboardButton(texts['yes'], callback_data="confirm_yes"),
+            InlineKeyboardButton(texts['no'], callback_data="confirm_no")
+        ],
+        [InlineKeyboardButton(texts['return_menu'], callback_data="back_to_menu")],
+        [InlineKeyboardButton("🇬🇧 English" if lang == "ru" else "🇷🇺 Русский", 
+                            callback_data="switch_lang")]
     ]
     return InlineKeyboardMarkup(keyboard)
 
@@ -302,8 +395,21 @@ async def webhook_handler(request):
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Начало диалога"""
+    welcome_text = (
+        "👋 Hi! I'm a bot for transferring data between Notion databases.\n\n"
+        "I'll help you:\n"
+        "📋 Transfer all records from one database to another\n"
+        "🔄 Preserve data structure and properties\n"
+        "📊 Track progress in real-time\n\n"
+        "👋 Привет! Я бот для переноса данных между базами Notion.\n\n"
+        "Я помогу вам:\n"
+        "📋 Перенести все записи из одной базы в другую\n"
+        "🔄 Сохранить структуру и свойства данных\n"
+        "📊 Отслеживать прогресс в реальном времени\n\n"
+        "Choose interface language / Выберите язык интерфейса:"
+    )
     await update.message.reply_text(
-        TEXTS['ru']['welcome'],  # Начинаем с русского
+        welcome_text,
         reply_markup=get_language_keyboard()
     )
     return LANGUAGE_SELECT
@@ -331,22 +437,34 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     texts = TEXTS[lang]
     
     action = query.data
-    if action == "transfer":
-        await query.edit_message_text(texts['origin_token_prompt'])
-        return ORIGIN_TOKEN
-    elif action in ["tokens_help", "db_help", "faq", "about", "help"]:
-        text = texts[f'{action}_text']
-        keyboard = [[InlineKeyboardButton(texts['back'], callback_data="back_to_menu")]]
+    if action == "switch_lang":
+        # Переключение языка
+        new_lang = "en" if lang == "ru" else "ru"
+        context.user_data['language'] = new_lang
         await query.edit_message_text(
-            text=text,
-            reply_markup=InlineKeyboardMarkup(keyboard),
-            parse_mode='Markdown'
+            text=TEXTS[new_lang]['select_action'],
+            reply_markup=get_main_menu_keyboard(new_lang)
         )
         return MAIN_MENU
+    elif action == "transfer":
+        await query.edit_message_text(
+            texts['origin_token_prompt'],
+            reply_markup=get_navigation_keyboard(lang)
+        )
+        return ORIGIN_TOKEN
     elif action == "back_to_menu":
         await query.edit_message_text(
             text=texts['select_action'],
             reply_markup=get_main_menu_keyboard(lang)
+        )
+        return MAIN_MENU
+    elif action in ["tokens_help", "db_help", "faq", "about", "help"]:
+        text = texts[f'{action}_text']
+        await query.edit_message_text(
+            text=text,
+            reply_markup=get_navigation_keyboard(lang),
+            parse_mode='Markdown',
+            disable_web_page_preview=True
         )
         return MAIN_MENU
     
@@ -366,48 +484,147 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
 async def get_origin_token(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Получение токена исходного аккаунта"""
+    if not update.message:  # Если это callback query
+        query = update.callback_query
+        await query.answer()
+        
+        lang = context.user_data.get('language', 'ru')
+        if query.data == "switch_lang":
+            new_lang = "en" if lang == "ru" else "ru"
+            context.user_data['language'] = new_lang
+            await query.edit_message_text(
+                TEXTS[new_lang]['origin_token_prompt'],
+                reply_markup=get_navigation_keyboard(new_lang)
+            )
+            return ORIGIN_TOKEN
+        return await menu_callback(update, context)
+    
     lang = context.user_data.get('language', 'ru')
     user_data[update.effective_user.id] = {"origin_token": update.message.text}
     
-    await update.message.reply_text(TEXTS[lang]['dest_token_prompt'])
+    await update.message.reply_text(
+        TEXTS[lang]['dest_token_prompt'],
+        reply_markup=get_navigation_keyboard(lang)
+    )
     return DEST_TOKEN
 
 async def get_dest_token(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Получение токена целевого аккаунта"""
+    if not update.message:  # Если это callback query
+        query = update.callback_query
+        await query.answer()
+        
+        lang = context.user_data.get('language', 'ru')
+        if query.data == "switch_lang":
+            new_lang = "en" if lang == "ru" else "ru"
+            context.user_data['language'] = new_lang
+            await query.edit_message_text(
+                TEXTS[new_lang]['dest_token_prompt'],
+                reply_markup=get_navigation_keyboard(new_lang)
+            )
+            return DEST_TOKEN
+        return await menu_callback(update, context)
+    
     lang = context.user_data.get('language', 'ru')
     user_data[update.effective_user.id]["dest_token"] = update.message.text
     
-    await update.message.reply_text(TEXTS[lang]['origin_db_prompt'])
+    await update.message.reply_text(
+        TEXTS[lang]['origin_db_prompt'],
+        reply_markup=get_navigation_keyboard(lang)
+    )
     return ORIGIN_DB
 
 async def get_origin_db(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Получение ID исходной базы данных"""
+    if not update.message:  # Если это callback query
+        query = update.callback_query
+        await query.answer()
+        
+        lang = context.user_data.get('language', 'ru')
+        if query.data == "switch_lang":
+            new_lang = "en" if lang == "ru" else "ru"
+            context.user_data['language'] = new_lang
+            await query.edit_message_text(
+                TEXTS[new_lang]['origin_db_prompt'],
+                reply_markup=get_navigation_keyboard(new_lang)
+            )
+            return ORIGIN_DB
+        return await menu_callback(update, context)
+    
     lang = context.user_data.get('language', 'ru')
     user_data[update.effective_user.id]["origin_db"] = update.message.text
     
-    await update.message.reply_text(TEXTS[lang]['dest_db_prompt'])
+    await update.message.reply_text(
+        TEXTS[lang]['dest_db_prompt'],
+        reply_markup=get_navigation_keyboard(lang)
+    )
     return DEST_DB
 
 async def get_dest_db(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Получение ID целевой базы данных"""
+    if not update.message:  # Если это callback query
+        query = update.callback_query
+        await query.answer()
+        
+        lang = context.user_data.get('language', 'ru')
+        if query.data == "switch_lang":
+            new_lang = "en" if lang == "ru" else "ru"
+            context.user_data['language'] = new_lang
+            await query.edit_message_text(
+                TEXTS[new_lang]['dest_db_prompt'],
+                reply_markup=get_navigation_keyboard(new_lang)
+            )
+            return DEST_DB
+        return await menu_callback(update, context)
+    
+    lang = context.user_data.get('language', 'ru')
     user_id = update.effective_user.id
     user_data[user_id]["dest_db"] = update.message.text
     
-    # Создание экземпляра класса переноса
-    transfer = NotionTransfer(
-        origin_token=user_data[user_id]["origin_token"],
-        dest_token=user_data[user_id]["dest_token"],
-        origin_db=user_data[user_id]["origin_db"],
-        dest_db=user_data[user_id]["dest_db"]
+    await update.message.reply_text(
+        TEXTS[lang]['transfer_confirm'],
+        reply_markup=get_confirmation_keyboard(lang)
     )
+    return CONFIRMATION
+
+async def confirm_transfer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Подтверждение переноса"""
+    query = update.callback_query
+    await query.answer()
     
-    await update.message.reply_text("🚀 Начинаю процесс переноса...")
-    await transfer.run(update)
+    lang = context.user_data.get('language', 'ru')
+    user_id = update.effective_user.id
     
-    # Очистка данных пользователя
-    del user_data[user_id]
-    
-    return ConversationHandler.END
+    if query.data == "switch_lang":
+        new_lang = "en" if lang == "ru" else "ru"
+        context.user_data['language'] = new_lang
+        await query.edit_message_text(
+            TEXTS[new_lang]['transfer_confirm'],
+            reply_markup=get_confirmation_keyboard(new_lang)
+        )
+        return CONFIRMATION
+    elif query.data == "confirm_yes":
+        # Создание экземпляра класса переноса
+        transfer = NotionTransfer(
+            origin_token=user_data[user_id]["origin_token"],
+            dest_token=user_data[user_id]["dest_token"],
+            origin_db=user_data[user_id]["origin_db"],
+            dest_db=user_data[user_id]["dest_db"]
+        )
+        
+        await query.edit_message_text("🚀 " + TEXTS[lang].get('transfer_started', 'Starting transfer process...'))
+        await transfer.run(query.message)
+        
+        # Очистка данных пользователя
+        del user_data[user_id]
+        
+        return ConversationHandler.END
+    else:
+        await query.edit_message_text(
+            text=TEXTS[lang]['select_action'],
+            reply_markup=get_main_menu_keyboard(lang)
+        )
+        return MAIN_MENU
 
 async def setup_webhook(app: Application, webhook_url: str):
     """Настройка вебхука"""
@@ -445,17 +662,40 @@ def main() -> None:
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
         states={
-            LANGUAGE_SELECT: [CallbackQueryHandler(language_callback, pattern=r"^lang_")],
-            MAIN_MENU: [CallbackQueryHandler(menu_callback)],
-            ORIGIN_TOKEN: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_origin_token)],
-            DEST_TOKEN: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_dest_token)],
-            ORIGIN_DB: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_origin_db)],
-            DEST_DB: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_dest_db)]
+            LANGUAGE_SELECT: [
+                CallbackQueryHandler(language_callback, pattern=r"^lang_")
+            ],
+            MAIN_MENU: [
+                CallbackQueryHandler(menu_callback)
+            ],
+            ORIGIN_TOKEN: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, get_origin_token),
+                CallbackQueryHandler(get_origin_token, pattern=r"^(back_to_menu|switch_lang)$")
+            ],
+            DEST_TOKEN: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, get_dest_token),
+                CallbackQueryHandler(get_dest_token, pattern=r"^(back_to_menu|switch_lang)$")
+            ],
+            ORIGIN_DB: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, get_origin_db),
+                CallbackQueryHandler(get_origin_db, pattern=r"^(back_to_menu|switch_lang)$")
+            ],
+            DEST_DB: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, get_dest_db),
+                CallbackQueryHandler(get_dest_db, pattern=r"^(back_to_menu|switch_lang)$")
+            ],
+            CONFIRMATION: [
+                CallbackQueryHandler(confirm_transfer, pattern=r"^(confirm_|back_to_menu|switch_lang)")
+            ]
         },
-        fallbacks=[CommandHandler("cancel", cancel)]
+        fallbacks=[CommandHandler("cancel", cancel)],
+        per_message=True
     )
     
     app.add_handler(conv_handler)
+    
+    # Добавление обработчика ошибок
+    app.add_error_handler(error_handler)
     
     # Запуск веб-сервера и настройка вебхука
     webhook_url = os.getenv("WEBHOOK_URL")
@@ -479,6 +719,15 @@ def main() -> None:
     else:
         # Fallback на polling режим для локальной разработки
         app.run_polling()
+
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обработчик ошибок"""
+    logger.error(f"Exception while handling an update: {context.error}")
+    
+    if isinstance(context.error, Exception):
+        error_message = "❌ Произошла ошибка. Пожалуйста, попробуйте снова или обратитесь к администратору."
+        if isinstance(update, Update) and update.effective_message:
+            await update.effective_message.reply_text(error_message)
 
 if __name__ == "__main__":
     main() 
