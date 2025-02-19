@@ -7,6 +7,7 @@ from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKey
 from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, ConversationHandler, CallbackQueryHandler, filters
 from aiohttp import web
 import asyncio
+import re
 
 from config.settings import BASE_DIR
 from notion.api import NotionAPI
@@ -25,6 +26,13 @@ logger = setup_logger(__name__)
 
 # Данные пользователей
 user_data: Dict[int, dict] = {}
+
+def escape_markdown_v2(text: str) -> str:
+    """Экранирование специальных символов для MarkdownV2"""
+    special_chars = ['_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
+    for char in special_chars:
+        text = text.replace(char, f'\\{char}')
+    return text
 
 # Тексты на разных языках
 TEXTS = {
@@ -87,14 +95,14 @@ TEXTS = {
         ),
         'help_text': (
             "*Помощь:*\n\n"
-            "🔹 */start* - Начать работу\n"
-            "🔹 */cancel* - Отменить текущую операцию\n"
-            "🔹 */help* - Показать это сообщение\n\n"
+            "🔹 /start \\- Начать работу\n"
+            "🔹 /cancel \\- Отменить текущую операцию\n"
+            "🔹 /help \\- Показать это сообщение\n\n"
             "При возникновении проблем:\n"
-            "1. Проверьте правильность токенов\n"
-            "2. Убедитесь, что ID баз указаны верно\n"
-            "3. Проверьте права доступа интеграций\n\n"
-            "Нужна помощь? Напишите @your_username"
+            "1\\. Проверьте правильность токенов\n"
+            "2\\. Убедитесь, что ID баз указаны верно\n"
+            "3\\. Проверьте права доступа интеграций\n\n"
+            "Нужна помощь? Напишите @your\\_username"
         ),
         'tokens_help_text': (
             "*Как получить токены Notion:*\n\n"
@@ -192,14 +200,14 @@ TEXTS = {
         ),
         'help_text': (
             "*Help:*\n\n"
-            "🔹 */start* - Start working\n"
-            "🔹 */cancel* - Cancel current operation\n"
-            "🔹 */help* - Show this message\n\n"
+            "🔹 /start \\- Start working\n"
+            "🔹 /cancel \\- Cancel current operation\n"
+            "🔹 /help \\- Show this message\n\n"
             "If you encounter problems:\n"
-            "1. Check if tokens are correct\n"
-            "2. Make sure database IDs are valid\n"
-            "3. Verify integration permissions\n\n"
-            "Need help? Contact @your_username"
+            "1\\. Check if tokens are correct\n"
+            "2\\. Make sure database IDs are valid\n"
+            "3\\. Verify integration permissions\n\n"
+            "Need help? Contact @your\\_username"
         ),
         'tokens_help_text': (
             "*How to get Notion tokens:*\n\n"
@@ -487,12 +495,21 @@ async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         return MAIN_MENU
     elif action in ["tokens_help", "db_help", "faq", "about", "help"]:
         text = texts[f'{action}_text']
-        await query.edit_message_text(
-            text=text,
-            reply_markup=get_navigation_keyboard(lang),
-            parse_mode='Markdown',
-            disable_web_page_preview=True
-        )
+        try:
+            await query.edit_message_text(
+                text=text,
+                reply_markup=get_navigation_keyboard(lang),
+                parse_mode='MarkdownV2',  # Используем MarkdownV2 вместо Markdown
+                disable_web_page_preview=True
+            )
+        except Exception as e:
+            logger.error(f"Error sending {action} message: {str(e)}")
+            # Если возникла ошибка с форматированием, отправляем без форматирования
+            await query.edit_message_text(
+                text=text.replace('*', '').replace('[', '').replace(']', ''),
+                reply_markup=get_navigation_keyboard(lang),
+                disable_web_page_preview=True
+            )
         return MAIN_MENU
     
     return MAIN_MENU
@@ -508,6 +525,12 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         reply_markup=ReplyKeyboardRemove()
     )
     return ConversationHandler.END
+
+def validate_notion_token(token: str) -> bool:
+    """Проверка формата токена Notion"""
+    # Формат токена: secret_XXXXX, где X - буквы и цифры, длина 50+ символов
+    pattern = r'^secret_[a-zA-Z0-9]{48,}$'
+    return bool(re.match(pattern, token))
 
 async def get_origin_token(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Получение токена исходного аккаунта"""
@@ -527,7 +550,18 @@ async def get_origin_token(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         return await menu_callback(update, context)
     
     lang = context.user_data.get('language', 'ru')
-    user_data[update.effective_user.id] = {"origin_token": update.message.text}
+    token = update.message.text.strip()
+    
+    if not validate_notion_token(token):
+        error_msg = "❌ Invalid Notion token format. Token should start with 'secret_' and be at least 50 characters long.\n\n" if lang == 'en' else "❌ Неверный формат токена Notion. Токен должен начинаться с 'secret_' и быть длиной не менее 50 символов.\n\n"
+        error_msg += TEXTS[lang]['origin_token_prompt']
+        await update.message.reply_text(
+            error_msg,
+            reply_markup=get_navigation_keyboard(lang)
+        )
+        return ORIGIN_TOKEN
+    
+    user_data[update.effective_user.id] = {"origin_token": token}
     
     await update.message.reply_text(
         TEXTS[lang]['dest_token_prompt'],
@@ -553,7 +587,18 @@ async def get_dest_token(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         return await menu_callback(update, context)
     
     lang = context.user_data.get('language', 'ru')
-    user_data[update.effective_user.id]["dest_token"] = update.message.text
+    token = update.message.text.strip()
+    
+    if not validate_notion_token(token):
+        error_msg = "❌ Invalid Notion token format. Token should start with 'secret_' and be at least 50 characters long.\n\n" if lang == 'en' else "❌ Неверный формат токена Notion. Токен должен начинаться с 'secret_' и быть длиной не менее 50 символов.\n\n"
+        error_msg += TEXTS[lang]['dest_token_prompt']
+        await update.message.reply_text(
+            error_msg,
+            reply_markup=get_navigation_keyboard(lang)
+        )
+        return DEST_TOKEN
+    
+    user_data[update.effective_user.id]["dest_token"] = token
     
     await update.message.reply_text(
         TEXTS[lang]['origin_db_prompt'],
