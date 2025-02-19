@@ -84,14 +84,14 @@ TEXTS = {
         ),
         'about_text': (
             "*О боте:*\n\n"
-            "Notion Transfer Bot помогает переносить данные между базами Notion. "
+            "Notion Transfer Bot помогает переносить данные между базами Notion\\. "
             "Бот использует официальный API Notion и поддерживает:\n\n"
             "✅ Перенос всех записей\n"
             "✅ Сохранение структуры\n"
             "✅ Отслеживание прогресса\n"
             "✅ Восстановление после ошибок\n\n"
-            "Версия: 1.0.0\n"
-            "Разработчик: @your_username"
+            "Версия: 1\\.0\\.0\n"
+            "Разработчик: @Creatman\\_it"
         ),
         'help_text': (
             "*Помощь:*\n\n"
@@ -102,7 +102,7 @@ TEXTS = {
             "1\\. Проверьте правильность токенов\n"
             "2\\. Убедитесь, что ID баз указаны верно\n"
             "3\\. Проверьте права доступа интеграций\n\n"
-            "Нужна помощь? Напишите @your\\_username"
+            "Нужна помощь? Напишите @Creatman\\_it"
         ),
         'tokens_help_text': (
             "*Как получить токены Notion:*\n\n"
@@ -189,14 +189,14 @@ TEXTS = {
         ),
         'about_text': (
             "*About:*\n\n"
-            "Notion Transfer Bot helps transfer data between Notion databases. "
+            "Notion Transfer Bot helps transfer data between Notion databases\\. "
             "The bot uses official Notion API and supports:\n\n"
             "✅ All records transfer\n"
             "✅ Structure preservation\n"
             "✅ Progress tracking\n"
             "✅ Error recovery\n\n"
-            "Version: 1.0.0\n"
-            "Developer: @your_username"
+            "Version: 1\\.0\\.0\n"
+            "Developer: @Creatman\\_it"
         ),
         'help_text': (
             "*Help:*\n\n"
@@ -207,7 +207,7 @@ TEXTS = {
             "1\\. Check if tokens are correct\n"
             "2\\. Make sure database IDs are valid\n"
             "3\\. Verify integration permissions\n\n"
-            "Need help? Contact @your\\_username"
+            "Need help? Contact @Creatman\\_it"
         ),
         'tokens_help_text': (
             "*How to get Notion tokens:*\n\n"

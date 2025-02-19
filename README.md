@@ -18,6 +18,8 @@ A Telegram bot for transferring data between Notion databases. The bot helps use
 - Automatic scaling on Render.com (starts on request)
 - Multilingual interface (English and Russian)
 - Comprehensive help system and FAQ
+- Strict token format validation
+- Language switching at any point without losing progress
 
 ### Usage
 
@@ -47,7 +49,7 @@ A Telegram bot for transferring data between Notion databases. The bot helps use
 1. **API Tokens:**
    - Go to [Notion Integrations](https://www.notion.so/my-integrations)
    - Create a new integration for both source and target workspaces
-   - Copy the generated tokens
+   - Copy the generated tokens (format: secret_xxxxx...)
 
 2. **Database IDs:**
    - Open your Notion database in browser
@@ -122,6 +124,49 @@ notion-transfer-bot/
 └── .env                   # Configuration
 ```
 
+### Potential Improvements
+
+1. **Data Transfer Enhancements:**
+   - Support for nested pages and subpages
+   - Handling of file attachments
+   - Selective property transfer
+   - Database schema comparison before transfer
+
+2. **User Experience:**
+   - Progress visualization with charts
+   - Transfer scheduling
+   - Batch operations
+   - Transfer templates
+   - Database preview before transfer
+
+3. **Security:**
+   - Token encryption in storage
+   - Rate limiting
+   - Access control lists
+   - Audit logging
+
+4. **Performance:**
+   - Parallel transfers
+   - Batch processing
+   - Caching of frequently accessed data
+   - Optimized database queries
+
+5. **Monitoring and Maintenance:**
+   - Health check dashboard
+   - Usage statistics
+   - Error rate monitoring
+   - Automated backups
+
+6. **Integration:**
+   - Support for other Notion features
+   - Export to different formats
+   - Integration with other platforms
+   - API for external access
+
+### Support
+
+Need help? Contact [@Creatman_it](https://t.me/Creatman_it)
+
 ### License
 
 MIT
@@ -144,6 +189,8 @@ Telegram бот для переноса данных между базами д�
 - Автоматическое масштабирование на Render.com (запуск по запросу)
 - Многоязычный интерфейс (русский и английский)
 - Система помощи и FAQ
+- Строгая валидация формата токенов
+- Переключение языка в любой момент без потери прогресса
 
 ### Использование
 
@@ -173,7 +220,7 @@ Telegram бот для переноса данных между базами д�
 1. **API токены:**
    - Перейдите в [Notion Integrations](https://www.notion.so/my-integrations)
    - Создайте новую интеграцию для исходного и целевого рабочих пространств
-   - Скопируйте сгенерированные токены
+   - Скопируйте сгенерированные токены (формат: secret_xxxxx...)
 
 2. **ID баз данных:**
    - Откройте вашу базу данных Notion в браузере
@@ -247,6 +294,49 @@ notion-transfer-bot/
 ├── requirements.txt       # Зависимости
 └── .env                   # Конфигурация
 ```
+
+### Потенциальные улучшения
+
+1. **Улучшения переноса данных:**
+   - Поддержка вложенных страниц и подстраниц
+   - Обработка файловых вложений
+   - Выборочный перенос свойств
+   - Сравнение схем баз данных перед переносом
+
+2. **Пользовательский опыт:**
+   - Визуализация прогресса с графиками
+   - Планирование переносов
+   - Пакетные операции
+   - Шаблоны переноса
+   - Предварительный просмотр базы данных
+
+3. **Безопасность:**
+   - Шифрование токенов при хранении
+   - Ограничение частоты запросов
+   - Списки контроля доступа
+   - Аудит действий
+
+4. **Производительность:**
+   - Параллельные переносы
+   - Пакетная обработка
+   - Кэширование часто используемых данных
+   - Оптимизация запросов к базе данных
+
+5. **Мониторинг и обслуживание:**
+   - Панель проверки состояния
+   - Статистика использования
+   - Мониторинг частоты ошибок
+   - Автоматическое резервное копирование
+
+6. **Интеграция:**
+   - Поддержка других функций Notion
+   - Экспорт в различные форматы
+   - Интеграция с другими платформами
+   - API для внешнего доступа
+
+### Поддержка
+
+Нужна помощь? Напишите [@Creatman_it](https://t.me/Creatman_it)
 
 ### Лицензия
 
