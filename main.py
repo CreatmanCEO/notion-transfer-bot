@@ -3,8 +3,8 @@ import os
 from pathlib import Path
 from typing import Optional, Dict
 from dotenv import load_dotenv
-from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
-from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, ConversationHandler, filters
+from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, ConversationHandler, CallbackQueryHandler, filters
 from aiohttp import web
 import asyncio
 
@@ -20,10 +20,153 @@ load_dotenv()
 logger = setup_logger(__name__)
 
 # Состояния диалога
-ORIGIN_TOKEN, DEST_TOKEN, ORIGIN_DB, DEST_DB, CONFIRMATION = range(5)
+(LANGUAGE_SELECT, MAIN_MENU, TRANSFER_START, ORIGIN_TOKEN, DEST_TOKEN, 
+ ORIGIN_DB, DEST_DB, CONFIRMATION, FAQ, HELP) = range(10)
 
 # Данные пользователей
 user_data: Dict[int, dict] = {}
+
+# Тексты на разных языках
+TEXTS = {
+    'ru': {
+        'welcome': (
+            "👋 Привет! Я бот для переноса данных между базами Notion.\n\n"
+            "Я помогу вам:\n"
+            "📋 Перенести все записи из одной базы в другую\n"
+            "🔄 Сохранить структуру и свойства данных\n"
+            "📊 Отслеживать прогресс в реальном времени\n\n"
+            "Выберите язык интерфейса:"
+        ),
+        'main_menu': "🏠 Главное меню",
+        'select_action': "Выберите действие:",
+        'start_transfer': "🚀 Начать перенос",
+        'how_to_get_tokens': "🔑 Как получить токены",
+        'how_to_get_db_ids': "📝 Как получить ID базы",
+        'faq': "❓ FAQ",
+        'about': "ℹ️ О боте",
+        'help': "🆘 Помощь",
+        'cancel': "❌ Отмена",
+        'back': "⬅️ Назад",
+        'origin_token_prompt': (
+            "🔑 Отправьте токен исходного аккаунта Notion\n\n"
+            "Как получить токен:\n"
+            "1. Перейдите на https://www.notion.so/my-integrations\n"
+            "2. Нажмите 'New integration'\n"
+            "3. Заполните форму и получите токен"
+        ),
+        'dest_token_prompt': "🔑 Теперь отправьте токен целевого аккаунта Notion",
+        'origin_db_prompt': (
+            "📁 Отправьте ID исходной базы данных\n\n"
+            "ID базы можно найти в её URL:\n"
+            "notion.so/workspace/[ID-БАЗЫ]?v=..."
+        ),
+        'dest_db_prompt': "📁 Отправьте ID целевой базы данных",
+        'faq_text': (
+            "*Часто задаваемые вопросы:*\n\n"
+            "*В: Как получить токен Notion?*\n"
+            "О: Перейдите в [Notion Integrations](https://www.notion.so/my-integrations), "
+            "создайте новую интеграцию и скопируйте токен.\n\n"
+            "*В: Где найти ID базы данных?*\n"
+            "О: Откройте базу данных в браузере и скопируйте ID из URL:\n"
+            "`notion.so/workspace/{ID-БАЗЫ}?v=...`\n\n"
+            "*В: Какие данные переносятся?*\n"
+            "О: Все записи базы данных с сохранением структуры и свойств.\n\n"
+            "*В: Можно ли отменить перенос?*\n"
+            "О: Да, используйте команду /cancel в любой момент."
+        ),
+        'about_text': (
+            "*О боте:*\n\n"
+            "Notion Transfer Bot помогает переносить данные между базами Notion. "
+            "Бот использует официальный API Notion и поддерживает:\n\n"
+            "✅ Перенос всех записей\n"
+            "✅ Сохранение структуры\n"
+            "✅ Отслеживание прогресса\n"
+            "✅ Восстановление после ошибок\n\n"
+            "Версия: 1.0.0\n"
+            "Разработчик: @your_username"
+        ),
+        'help_text': (
+            "*Помощь:*\n\n"
+            "🔹 */start* - Начать работу\n"
+            "🔹 */cancel* - Отменить текущую операцию\n"
+            "🔹 */help* - Показать это сообщение\n\n"
+            "При возникновении проблем:\n"
+            "1. Проверьте правильность токенов\n"
+            "2. Убедитесь, что ID баз указаны верно\n"
+            "3. Проверьте права доступа интеграций\n\n"
+            "Нужна помощь? Напишите @your_username"
+        )
+    },
+    'en': {
+        'welcome': (
+            "👋 Hi! I'm a bot for transferring data between Notion databases.\n\n"
+            "I'll help you:\n"
+            "📋 Transfer all records from one database to another\n"
+            "🔄 Preserve data structure and properties\n"
+            "📊 Track progress in real-time\n\n"
+            "Choose interface language:"
+        ),
+        'main_menu': "🏠 Main Menu",
+        'select_action': "Select an action:",
+        'start_transfer': "🚀 Start Transfer",
+        'how_to_get_tokens': "🔑 How to Get Tokens",
+        'how_to_get_db_ids': "📝 How to Get DB IDs",
+        'faq': "❓ FAQ",
+        'about': "ℹ️ About",
+        'help': "🆘 Help",
+        'cancel': "❌ Cancel",
+        'back': "⬅️ Back",
+        'origin_token_prompt': (
+            "🔑 Send the source Notion account token\n\n"
+            "How to get the token:\n"
+            "1. Go to https://www.notion.so/my-integrations\n"
+            "2. Click 'New integration'\n"
+            "3. Fill the form and get the token"
+        ),
+        'dest_token_prompt': "🔑 Now send the target account token",
+        'origin_db_prompt': (
+            "📁 Send the source database ID\n\n"
+            "You can find the ID in its URL:\n"
+            "notion.so/workspace/[DATABASE-ID]?v=..."
+        ),
+        'dest_db_prompt': "📁 Send the target database ID",
+        'faq_text': (
+            "*Frequently Asked Questions:*\n\n"
+            "*Q: How to get a Notion token?*\n"
+            "A: Go to [Notion Integrations](https://www.notion.so/my-integrations), "
+            "create a new integration and copy the token.\n\n"
+            "*Q: Where to find database ID?*\n"
+            "A: Open the database in browser and copy ID from URL:\n"
+            "`notion.so/workspace/{DATABASE-ID}?v=...`\n\n"
+            "*Q: What data is transferred?*\n"
+            "A: All database records with preserved structure and properties.\n\n"
+            "*Q: Can I cancel the transfer?*\n"
+            "A: Yes, use /cancel command at any time."
+        ),
+        'about_text': (
+            "*About:*\n\n"
+            "Notion Transfer Bot helps transfer data between Notion databases. "
+            "The bot uses official Notion API and supports:\n\n"
+            "✅ All records transfer\n"
+            "✅ Structure preservation\n"
+            "✅ Progress tracking\n"
+            "✅ Error recovery\n\n"
+            "Version: 1.0.0\n"
+            "Developer: @your_username"
+        ),
+        'help_text': (
+            "*Help:*\n\n"
+            "🔹 */start* - Start working\n"
+            "🔹 */cancel* - Cancel current operation\n"
+            "🔹 */help* - Show this message\n\n"
+            "If you encounter problems:\n"
+            "1. Check if tokens are correct\n"
+            "2. Make sure database IDs are valid\n"
+            "3. Verify integration permissions\n\n"
+            "Need help? Contact @your_username"
+        )
+    }
+}
 
 # Глобальная переменная для хранения объекта приложения
 app = None
@@ -118,6 +261,33 @@ class NotionTransfer:
             logger.error(f"Критическая ошибка: {str(e)}")
             await update.message.reply_text(f"❌ Произошла ошибка: {str(e)}")
 
+def get_language_keyboard():
+    """Создание клавиатуры выбора языка"""
+    keyboard = [
+        [
+            InlineKeyboardButton("🇷🇺 Русский", callback_data="lang_ru"),
+            InlineKeyboardButton("🇬🇧 English", callback_data="lang_en")
+        ]
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
+def get_main_menu_keyboard(lang: str):
+    """Создание клавиатуры главного меню"""
+    texts = TEXTS[lang]
+    keyboard = [
+        [InlineKeyboardButton(texts['start_transfer'], callback_data="transfer")],
+        [
+            InlineKeyboardButton(texts['how_to_get_tokens'], callback_data="tokens_help"),
+            InlineKeyboardButton(texts['how_to_get_db_ids'], callback_data="db_help")
+        ],
+        [
+            InlineKeyboardButton(texts['faq'], callback_data="faq"),
+            InlineKeyboardButton(texts['about'], callback_data="about")
+        ],
+        [InlineKeyboardButton(texts['help'], callback_data="help")]
+    ]
+    return InlineKeyboardMarkup(keyboard)
+
 # Веб-хендлеры
 async def health_check(request):
     """Эндпоинт проверки здоровья сервиса"""
@@ -132,64 +302,94 @@ async def webhook_handler(request):
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Начало диалога"""
-    reply_keyboard = [["Начать перенос", "Отмена"]]
     await update.message.reply_text(
-        "👋 Привет! Я помогу перенести данные между базами Notion.\n"
-        "Для начала мне понадобится несколько параметров.\n"
-        "Вы можете отменить процесс в любой момент, отправив /cancel",
-        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
+        TEXTS['ru']['welcome'],  # Начинаем с русского
+        reply_markup=get_language_keyboard()
     )
-    return ORIGIN_TOKEN
+    return LANGUAGE_SELECT
+
+async def language_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Обработка выбора языка"""
+    query = update.callback_query
+    await query.answer()
+    
+    lang = query.data.split('_')[1]
+    context.user_data['language'] = lang
+    
+    await query.edit_message_text(
+        text=TEXTS[lang]['select_action'],
+        reply_markup=get_main_menu_keyboard(lang)
+    )
+    return MAIN_MENU
+
+async def menu_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Обработка действий из главного меню"""
+    query = update.callback_query
+    await query.answer()
+    
+    lang = context.user_data.get('language', 'ru')
+    texts = TEXTS[lang]
+    
+    action = query.data
+    if action == "transfer":
+        await query.edit_message_text(texts['origin_token_prompt'])
+        return ORIGIN_TOKEN
+    elif action in ["tokens_help", "db_help", "faq", "about", "help"]:
+        text = texts[f'{action}_text']
+        keyboard = [[InlineKeyboardButton(texts['back'], callback_data="back_to_menu")]]
+        await query.edit_message_text(
+            text=text,
+            reply_markup=InlineKeyboardMarkup(keyboard),
+            parse_mode='Markdown'
+        )
+        return MAIN_MENU
+    elif action == "back_to_menu":
+        await query.edit_message_text(
+            text=texts['select_action'],
+            reply_markup=get_main_menu_keyboard(lang)
+        )
+        return MAIN_MENU
+    
+    return MAIN_MENU
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Отмена операции"""
     user = update.message.from_user
+    lang = context.user_data.get('language', 'ru')
     logger.info(f"Пользователь {user.id} отменил операцию")
+    
     await update.message.reply_text(
-        "👋 Операция отменена. Для начала нового переноса отправьте /start",
+        TEXTS[lang]['cancel'],
         reply_markup=ReplyKeyboardRemove()
     )
     return ConversationHandler.END
 
 async def get_origin_token(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Получение токена исходного аккаунта"""
-    if update.message.text == "Отмена":
-        return await cancel(update, context)
+    lang = context.user_data.get('language', 'ru')
+    user_data[update.effective_user.id] = {"origin_token": update.message.text}
     
-    await update.message.reply_text(
-        "🔑 Пожалуйста, отправьте токен исходного аккаунта Notion (ORIGIN_NOTION_TOKEN)"
-    )
+    await update.message.reply_text(TEXTS[lang]['dest_token_prompt'])
     return DEST_TOKEN
 
 async def get_dest_token(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Получение токена целевого аккаунта"""
-    user_data[update.effective_user.id] = {"origin_token": update.message.text}
+    lang = context.user_data.get('language', 'ru')
+    user_data[update.effective_user.id]["dest_token"] = update.message.text
     
-    await update.message.reply_text(
-        "🔑 Теперь отправьте токен целевого аккаунта Notion (DEST_NOTION_TOKEN)"
-    )
+    await update.message.reply_text(TEXTS[lang]['origin_db_prompt'])
     return ORIGIN_DB
 
 async def get_origin_db(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Получение ID исходной базы данных"""
-    user_data[update.effective_user.id]["dest_token"] = update.message.text
+    lang = context.user_data.get('language', 'ru')
+    user_data[update.effective_user.id]["origin_db"] = update.message.text
     
-    await update.message.reply_text(
-        "📁 Отправьте ID исходной базы данных (ORIGIN_DATABASE_ID)"
-    )
+    await update.message.reply_text(TEXTS[lang]['dest_db_prompt'])
     return DEST_DB
 
 async def get_dest_db(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Получение ID целевой базы данных"""
-    user_data[update.effective_user.id]["origin_db"] = update.message.text
-    
-    await update.message.reply_text(
-        "📁 Отправьте ID целевой базы данных (DEST_DATABASE_ID)"
-    )
-    return CONFIRMATION
-
-async def confirm_transfer(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Подтверждение и начало переноса"""
     user_id = update.effective_user.id
     user_data[user_id]["dest_db"] = update.message.text
     
@@ -241,15 +441,16 @@ def main() -> None:
     # Создание и настройка бота
     app = Application.builder().token(bot_token).build()
     
-    # Добавление обработчика диалога
+    # Добавление обработчиков
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
         states={
+            LANGUAGE_SELECT: [CallbackQueryHandler(language_callback, pattern=r"^lang_")],
+            MAIN_MENU: [CallbackQueryHandler(menu_callback)],
             ORIGIN_TOKEN: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_origin_token)],
             DEST_TOKEN: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_dest_token)],
             ORIGIN_DB: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_origin_db)],
-            DEST_DB: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_dest_db)],
-            CONFIRMATION: [MessageHandler(filters.TEXT & ~filters.COMMAND, confirm_transfer)]
+            DEST_DB: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_dest_db)]
         },
         fallbacks=[CommandHandler("cancel", cancel)]
     )

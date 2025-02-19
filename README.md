@@ -16,17 +16,31 @@ A Telegram bot for transferring data between Notion databases. The bot helps use
 - Interactive dialog interface
 - Error handling and recovery
 - Automatic scaling on Render.com (starts on request)
+- Multilingual interface (English and Russian)
+- Comprehensive help system and FAQ
 
 ### Usage
 
-1. Start a chat with the bot [@NotionExportBot](https://t.me/NotionExportBot)
-2. Send `/start` command to begin the transfer process
-3. Follow the bot's instructions to provide:
+1. Start a chat with [@NotionTransferBot](https://t.me/NotionExportBot)
+2. Choose your preferred language (English or Russian)
+3. Use the interactive menu to:
+   - Start data transfer
+   - Learn how to get Notion tokens
+   - Find database IDs
+   - Read FAQ
+   - Get help
+4. Follow the bot's instructions to provide:
    - Source Notion API token
    - Target Notion API token
    - Source database ID
    - Target database ID
-4. Confirm the transfer and wait for completion
+5. Monitor the transfer progress in real-time
+
+### Bot Commands
+
+- `/start` - Start the bot and choose language
+- `/cancel` - Cancel current operation
+- `/help` - Show help information
 
 ### How to Get Notion API Tokens and Database IDs
 
@@ -104,7 +118,7 @@ notion-transfer-bot/
 │   └── helpers.py         # Helper functions
 ├── Dockerfile             # Docker configuration
 ├── render.yaml            # Render.com configuration
-├── requirements.txt        # Dependencies
+├── requirements.txt       # Dependencies
 └── .env                   # Configuration
 ```
 
@@ -128,17 +142,31 @@ Telegram бот для переноса данных между базами д�
 - Интерактивный диалоговый интерфейс
 - Обработка ошибок и восстановление
 - Автоматическое масштабирование на Render.com (запуск по запросу)
+- Многоязычный интерфейс (русский и английский)
+- Система помощи и FAQ
 
 ### Использование
 
-1. Начните чат с ботом [@NotionExportBot](https://t.me/NotionExportBot)
-2. Отправьте команду `/start` для начала процесса переноса
-3. Следуйте инструкциям бота для предоставления:
+1. Начните чат с [@NotionTransferBot](https://t.me/NotionExportBot)
+2. Выберите предпочитаемый язык (русский или английский)
+3. Используйте интерактивное меню для:
+   - Начала переноса данных
+   - Получения информации о токенах Notion
+   - Поиска ID баз данных
+   - Чтения FAQ
+   - Получения помощи
+4. Следуйте инструкциям бота для предоставления:
    - API токена исходного аккаунта Notion
    - API токена целевого аккаунта Notion
    - ID исходной базы данных
    - ID целевой базы данных
-4. Подтвердите перенос и дождитесь завершения
+5. Отслеживайте прогресс переноса в реальном времени
+
+### Команды бота
+
+- `/start` - Запустить бота и выбрать язык
+- `/cancel` - Отменить текущую операцию
+- `/help` - Показать справку
 
 ### Как получить API токены и ID баз данных Notion
 
@@ -216,7 +244,7 @@ notion-transfer-bot/
 │   └── helpers.py         # Вспомогательные функции
 ├── Dockerfile             # Конфигурация Docker
 ├── render.yaml            # Конфигурация Render.com
-├── requirements.txt        # Зависимости
+├── requirements.txt       # Зависимости
 └── .env                   # Конфигурация
 ```
 
