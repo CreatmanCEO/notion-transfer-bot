@@ -223,7 +223,7 @@ async def run_web_server():
     runner = web.AppRunner(web_app)
     await runner.setup()
     
-    port = int(os.environ.get("PORT", "8080"))
+    port = int(os.environ.get("PORT", "10000"))
     site = web.TCPSite(runner, "0.0.0.0", port)
     await site.start()
     logger.info(f"Веб-сервер запущен на порту {port}")
@@ -259,9 +259,22 @@ def main() -> None:
     # Запуск веб-сервера и настройка вебхука
     webhook_url = os.getenv("WEBHOOK_URL")
     if webhook_url:
-        asyncio.get_event_loop().run_until_complete(setup_webhook(app, webhook_url))
-        asyncio.get_event_loop().run_until_complete(run_web_server())
-        asyncio.get_event_loop().run_forever()
+        # Создаем и запускаем асинхронный цикл событий
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        
+        # Инициализируем приложение
+        loop.run_until_complete(app.initialize())
+        
+        # Настраиваем вебхук и запускаем сервер
+        loop.run_until_complete(setup_webhook(app, webhook_url))
+        loop.run_until_complete(run_web_server())
+        
+        # Запускаем приложение
+        loop.run_until_complete(app.start())
+        
+        # Запускаем цикл событий
+        loop.run_forever()
     else:
         # Fallback на polling режим для локальной разработки
         app.run_polling()

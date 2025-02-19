@@ -13,5 +13,7 @@ services:
         value: 7343545514:AAFUY4a9arc5dR2wHQU5uma3AC58HJ03vJM
       - key: WEBHOOK_URL
         value: https://notion-transfer-bot.onrender.com/webhook
+      - key: PORT
+        value: 10000
     buildCommand: docker build -t notion-transfer-bot .
-    startCommand: docker run notion-transfer-bot 
+    startCommand: docker run -p 10000:10000 -e TELEGRAM_BOT_TOKEN -e WEBHOOK_URL -e PORT notion-transfer-bot 
