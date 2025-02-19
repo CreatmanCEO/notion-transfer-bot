@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: notion-transfer-bot
+    env: docker
+    region: frankfurt
+    plan: free
+    scaling:
+      minInstances: 0
+      maxInstances: 1
+    healthCheckPath: /health
+    envVars:
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+    buildCommand: docker build -t notion-transfer-bot .
+    startCommand: docker run notion-transfer-bot 

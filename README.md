@@ -1,25 +1,50 @@
-# Notion Database Transfer Tool / Инструмент переноса баз данных Notion
+# Notion Database Transfer Bot / Бот для переноса баз данных Notion
 
 [English](#english) | [Русский](#russian)
 
 ## English
 
-A tool for transferring data between Notion databases. Supports transfer between different workspaces and accounts.
+A Telegram bot for transferring data between Notion databases. The bot helps users migrate data between different workspaces and accounts through a simple chat interface.
 
 ### Features
 
 - Transfer all records from one Notion database to another
 - Preserve data structure and properties
 - Handle API limitations
-- Process logging
-- Recovery capability after failures
+- Real-time progress updates
+- Support for multiple users
+- Interactive dialog interface
+- Error handling and recovery
+- Automatic scaling on Render.com (starts on request)
 
-### Installation
+### Usage
+
+1. Start a chat with the bot [@NotionExportBot](https://t.me/NotionExportBot)
+2. Send `/start` command to begin the transfer process
+3. Follow the bot's instructions to provide:
+   - Source Notion API token
+   - Target Notion API token
+   - Source database ID
+   - Target database ID
+4. Confirm the transfer and wait for completion
+
+### How to Get Notion API Tokens and Database IDs
+
+1. **API Tokens:**
+   - Go to [Notion Integrations](https://www.notion.so/my-integrations)
+   - Create a new integration for both source and target workspaces
+   - Copy the generated tokens
+
+2. **Database IDs:**
+   - Open your Notion database in browser
+   - Copy the ID from the URL: `https://notion.so/workspace/{DATABASE_ID}?v=...`
+
+### Development Setup
 
 1. Clone the repository:
 ```bash
 git clone [repository-url]
-cd notion-transfer-tool
+cd notion-transfer-bot
 ```
 
 2. Install dependencies:
@@ -33,50 +58,55 @@ cp .env.example .env
 ```
 
 4. Fill .env with your data:
-- ORIGIN_NOTION_TOKEN: Source account API token
-- DEST_NOTION_TOKEN: Target account API token
-- ORIGIN_DATABASE_ID: Source database ID
-- DEST_DATABASE_ID: Target database ID
+```
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+WEBHOOK_URL=your_webhook_url  # Only for production
+```
 
-### Usage
-
-1. Configure settings in .env file
-2. Run the script:
+5. Run the bot:
 ```bash
 python main.py
 ```
 
+### Deployment to Render.com
+
+1. Create a new account on [Render.com](https://render.com) if you don't have one
+2. Fork this repository to your GitHub account
+3. In Render dashboard:
+   - Click "New +"
+   - Select "Web Service"
+   - Connect your GitHub repository
+   - Configure the service:
+     - Name: `notion-transfer-bot`
+     - Environment: `Docker`
+     - Region: Select nearest to your users
+     - Branch: `main`
+     - Plan: `Free`
+   - Add environment variables:
+     - `TELEGRAM_BOT_TOKEN`: Your bot token
+     - `WEBHOOK_URL`: `https://your-service-name.onrender.com/webhook`
+4. Click "Create Web Service"
+
+The bot will automatically start when someone sends a message and stop after 15 minutes of inactivity to stay within the free tier limits.
+
 ### Project Structure
 
 ```
-notion-transfer-tool/
-├── main.py                 # Entry point
+notion-transfer-bot/
+├── main.py                 # Bot implementation and entry point
 ├── config/
 │   └── settings.py         # Project settings
 ├── notion/
-│   ├── api.py             # API client
+│   ├── api.py             # Notion API client
 │   └── models.py          # Data models
 ├── utils/
 │   ├── logger.py          # Logging settings
 │   └── helpers.py         # Helper functions
+├── Dockerfile             # Docker configuration
+├── render.yaml            # Render.com configuration
 ├── requirements.txt        # Dependencies
 └── .env                   # Configuration
 ```
-
-### Logging
-
-Logs are saved in the `logs/` directory and contain information about:
-- Transfer start and completion
-- Successfully transferred pages
-- Errors and retry attempts
-- Progress status
-
-### Error Handling
-
-- Automatic recovery after failures
-- API error retries
-- Progress saving
-- Request rate limit handling
 
 ### License
 
@@ -86,22 +116,47 @@ MIT
 
 ## Russian
 
-Инструмент для переноса данных между базами данных Notion. Поддерживает перенос между разными рабочими пространствами и аккаунтами.
+Telegram бот для переноса данных между базами данных Notion. Бот помогает пользователям мигрировать данные между различными рабочими пространствами и аккаунтами через простой чат-интерфейс.
 
 ### Возможности
 
 - Перенос всех записей из одной базы данных Notion в другую
 - Сохранение структуры данных и свойств
 - Обработка ограничений API
-- Логирование процесса переноса
-- Возможность восстановления после сбоев
+- Обновления прогресса в реальном времени
+- Поддержка множества пользователей
+- Интерактивный диалоговый интерфейс
+- Обработка ошибок и восстановление
+- Автоматическое масштабирование на Render.com (запуск по запросу)
 
-### Установка
+### Использование
+
+1. Начните чат с ботом [@NotionExportBot](https://t.me/NotionExportBot)
+2. Отправьте команду `/start` для начала процесса переноса
+3. Следуйте инструкциям бота для предоставления:
+   - API токена исходного аккаунта Notion
+   - API токена целевого аккаунта Notion
+   - ID исходной базы данных
+   - ID целевой базы данных
+4. Подтвердите перенос и дождитесь завершения
+
+### Как получить API токены и ID баз данных Notion
+
+1. **API токены:**
+   - Перейдите в [Notion Integrations](https://www.notion.so/my-integrations)
+   - Создайте новую интеграцию для исходного и целевого рабочих пространств
+   - Скопируйте сгенерированные токены
+
+2. **ID баз данных:**
+   - Откройте вашу базу данных Notion в браузере
+   - Скопируйте ID из URL: `https://notion.so/workspace/{DATABASE_ID}?v=...`
+
+### Настройка для разработки
 
 1. Клонируйте репозиторий:
 ```bash
 git clone [url-репозитория]
-cd notion-transfer-tool
+cd notion-transfer-bot
 ```
 
 2. Установите зависимости:
@@ -115,50 +170,55 @@ cp .env.example .env
 ```
 
 4. Заполните .env своими данными:
-- ORIGIN_NOTION_TOKEN: API токен исходного аккаунта
-- DEST_NOTION_TOKEN: API токен целевого аккаунта
-- ORIGIN_DATABASE_ID: ID исходной базы данных
-- DEST_DATABASE_ID: ID целевой базы данных
+```
+TELEGRAM_BOT_TOKEN=ваш_токен_telegram_бота
+WEBHOOK_URL=ваш_webhook_url  # Только для продакшена
+```
 
-### Использование
-
-1. Настройте конфигурацию в файле .env
-2. Запустите скрипт:
+5. Запустите бота:
 ```bash
 python main.py
 ```
 
+### Деплой на Render.com
+
+1. Создайте аккаунт на [Render.com](https://render.com), если у вас его нет
+2. Сделайте форк этого репозитория в свой GitHub аккаунт
+3. В панели управления Render:
+   - Нажмите "New +"
+   - Выберите "Web Service"
+   - Подключите ваш GitHub репозиторий
+   - Настройте сервис:
+     - Имя: `notion-transfer-bot`
+     - Окружение: `Docker`
+     - Регион: Выберите ближайший к вашим пользователям
+     - Ветка: `main`
+     - План: `Free`
+   - Добавьте переменные окружения:
+     - `TELEGRAM_BOT_TOKEN`: Ваш токен бота
+     - `WEBHOOK_URL`: `https://your-service-name.onrender.com/webhook`
+4. Нажмите "Create Web Service"
+
+Бот будет автоматически запускаться при получении сообщения и останавливаться после 15 минут неактивности, чтобы оставаться в пределах бесплатного тарифа.
+
 ### Структура проекта
 
 ```
-notion-transfer-tool/
-├── main.py                 # Точка входа
+notion-transfer-bot/
+├── main.py                 # Реализация бота и точка входа
 ├── config/
 │   └── settings.py         # Настройки проекта
 ├── notion/
-│   ├── api.py             # API клиент
+│   ├── api.py             # API клиент Notion
 │   └── models.py          # Модели данных
 ├── utils/
 │   ├── logger.py          # Настройки логирования
 │   └── helpers.py         # Вспомогательные функции
+├── Dockerfile             # Конфигурация Docker
+├── render.yaml            # Конфигурация Render.com
 ├── requirements.txt        # Зависимости
 └── .env                   # Конфигурация
 ```
-
-### Логирование
-
-Логи сохраняются в директории `logs/` и содержат информацию о:
-- Начале и завершении переноса
-- Успешно перенесенных страницах
-- Ошибках и повторных попытках
-- Прогрессе выполнения
-
-### Обработка ошибок
-
-- Автоматическое восстановление после сбоев
-- Повторные попытки при ошибках API
-- Сохранение прогресса
-- Обработка ограничений скорости запросов
 
 ### Лицензия
 
